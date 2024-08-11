@@ -6,13 +6,13 @@ import subprocess
 import sys
 
 
-# Created bt TheHerowither, based on (https://en.wikipedia.org/wiki/Minesweeper_(video_game))
+# Created by TheHerowither, based on (https://en.wikipedia.org/wiki/Minesweeper_(video_game))
 
 class MinesweeperSquare:
     def __init__(self, value : int = 0) -> None:
         self.opened = False
         self.value = value
-        self.is_bomb = False
+        self.is_bomb = False    # redundant field [Pickle]
 
 
 def print_square(square : MinesweeperSquare, end : str = "\n", is_selected : bool = False):
@@ -79,8 +79,10 @@ class Minesweeper:
             except KeyboardInterrupt:
                 sys.exit(0)
 
-
-
+# [Pickle]:
+# comment this shit out before you commit.
+# local testing code should always be removed or commented out
+# if I import this lib, it will run and fuck shit up
 if __name__ == "__main__":
     game = Minesweeper("9x9")
     game.generate_board(10)
