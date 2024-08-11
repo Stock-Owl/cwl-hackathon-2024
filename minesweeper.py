@@ -17,8 +17,12 @@ class MinesweeperSquare:
 
 def print_square(square : MinesweeperSquare, end : str = "\n", is_selected : bool = False):
     if square.opened:
-        if is_selected: print(f"\033[47m\033[30m{square.value}\033[0m", end = end)
-        else: print(square.value, end = end)
+        if square.is_bomb:
+            if is_selected: print(f"\033[47m\033[30m▣\033[0m", end = end)
+            else: print("▣", end = end)
+        else:
+            if is_selected: print(f"\033[47m\033[30m{square.value}\033[0m", end = end)
+            else: print(square.value, end = end)
     else:
         if is_selected: print(f"\033[47m\033[30m■\033[0m", end = end)
         else: print("■", end = end)
@@ -43,10 +47,14 @@ class Minesweeper:
         for x in range(0, self.size.x * self.size.y):
             self.board.append(MinesweeperSquare(0))
 
+        bombs = 0
         for i in range(0, num_bombs):
             idx = random.randint(0, len(self.board)-1)
             while not self.board[idx].is_bomb:
-                if not self.board[idx].is_bomb: self.board[idx].is_bomb = True
+                if not self.board[idx].is_bomb:
+                    self.board[idx].is_bomb = True
+                    bombs += 1
+                    break
                 idx = random.randint(0, len(self.board)-1)
 
     def update(self):
