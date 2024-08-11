@@ -1,9 +1,8 @@
 import tkinter as tk
 from PIL import ImageTk, Image
-import os
 
 # creates window and canvas
-root = tk.Tk().
+root = tk.Tk()
 root.title("Peter Alert")
 canvas = tk.Canvas(root, width=200, height=193)
 
@@ -29,6 +28,3 @@ button = tk.Button(root,
                    width=20,
                    justify="center")
 button.pack()
-
-# root.mainloop()
-input()
