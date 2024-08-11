@@ -1,3 +1,4 @@
+# Made by [Pickle]
 # Baseclass and interface for the typing UI
 
 class Typer:
@@ -160,25 +161,29 @@ class Typer:
             return prev_lines
 
     def __init__(self, text: str, path: bool = False, displayed_lines: int = 3):
-        self.text: list[str]
-        self.num_lines: int
+        init_text: list[str]
+        
+        self.buffer: list[str] = []
+        self.intercept: function
         self.displayed_lines: int   # should we cap this at 10?
         self.current_line: list[str] # length should be between 1 and 3
+        self.state: Typer.State
 
         if path:
             with open(path, mode='r', encoding='utf-8') as f:
-                self.text = f.read().split('\n')
+                init_text = f.read().split('\n')
         else:
-            self.text = text.split('\n')
+            init_text = text.split('\n')
         
-        self.num_lines = len(self.text)
         if displayed_lines < 1:
             self.displayed_lines = 1
         else:
             self.displayed_lines = displayed_lines
-        self.current_line = self.text[0]
+        self.current_line = init_text[0]
 
-    def Start(self):
+        self.state = Typer.State(init_text)
+
+    def Update(self):
         pass
 
     def __str__(self):
