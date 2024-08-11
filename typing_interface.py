@@ -128,7 +128,8 @@ class Typer:
             return next_lines
 
         # previous lines
-        def Previous(self) -> int | 0:
+        def Previous(self) -> int:
+            """Returns 0 if out of bounds"""
             if self.current_line_idx < 1:
                 self.current_line = self.text[0]
                 self.current_line_idx = 0
@@ -184,3 +185,5 @@ class Typer:
         pass
 
 # print("\x1B[41;36m stuff")
+
+import minesweeper
