@@ -108,13 +108,51 @@ class Minesweeper:
             if square_idx % self.size.x == 0: print_square(self.board[square_idx-1], is_selected=square_idx-1 == idx)
             else: print_square(self.board[square_idx-1], end = "", is_selected=square_idx-1 == idx)
 
-
+    def board_at(self, x : int, y : int) -> GridPos:
+        return self.board[self.get_idx(x, y)]
 
     def uncover_all(self):
         for i in range(0, len(self.board)):
             self.board[i].opened = True
             time.sleep(0.01)
             self.update()
+
+    def uncover_around(self, pos : GridPos) -> list[GridPos]:
+        x = pos.x
+        y = pos.y
+        ret = []
+        if y >> 0:
+            if (self.board_at(x,   y-1).value == 0 and not self.board_at(x, y-1).opened):
+                ret.append(GridPos(x,   y-1))
+                self.board[self.get_idx(x,   y-1)].opened = True
+
+        if x >> 0:
+            if (self.board_at(x-1,   y).value == 0 and not self.board_at(x-1, y).opened):
+                ret.append(GridPos(x-1,   y))
+                self.board[self.get_idx(x-1,   y)].opened = True
+
+
+        if (self.board_at(x+1, y).value == 0 and not self.board_at(x+1, y).opened):
+            ret.append(GridPos(x+1, y))
+            self.board[self.get_idx(x+1, y)].opened = True
+
+        if (self.board_at(x,   y+1).value == 0 and not self.board_at(x, y+1).opened):
+            ret.append(GridPos(x, y+1))
+            self.board[self.get_idx(x,   y+1)].opened = True
+
+
+        return ret
+
+    def uncover_0s(self):
+        lst = self.uncover_around(self.cursor)
+        def rec_uncover(lst : list):
+            self.update()
+            time.sleep(0.01)
+            print(len(lst))
+            if len(lst) == 0: return
+            for q in lst:
+                rec_uncover(self.uncover_around(q))
+        rec_uncover(lst)
 
     def run(self):
         running = True
@@ -142,6 +180,8 @@ class Minesweeper:
                         self.update()
                         print("GAME OVER!!")
                         running = False;
+                    if self.board[self.get_idx(self.cursor.x, self.cursor.y)].value == 0:
+                        self.uncover_0s();
                 elif c == 'f': 
                     self.board[self.get_idx(self.cursor.x, self.cursor.y)].flag = True
             except KeyboardInterrupt:
