@@ -8,6 +8,11 @@ import sys
 
 # Created by TheHerowither, based on (https://en.wikipedia.org/wiki/Minesweeper_(video_game))
 
+class GridPos:
+    def __init__(self, x : int | float, y : int | float):
+        self.x = x
+        self.y = y
+
 class MinesweeperSquare:
     def __init__(self, value : int = 0) -> None:
         self.opened = False
@@ -28,20 +33,20 @@ def print_square(square : MinesweeperSquare, end : str = "\n", is_selected : boo
         else: print("■", end = end)
 
 class Minesweeper:
-    def __init__(self, size : str | tuple[int, int] | Vector2 = "10x10") -> None:
-        self.size : Vector2
+    def __init__(self, size : str | tuple[int, int] | GridPos = "10x10") -> None:
+        self.size : GridPos
         if type(size) == str:
             sz = size.split("x")
-            self.size = Vector2(int(sz[0]), int(sz[1]))
+            self.size = GridPos(int(sz[0]), int(sz[1]))
         elif type(size) == tuple:
-            self.size = Vector2(size[0], size[1])
-        elif type(size) == Vector2:
+            self.size = GridPos(size[0], size[1])
+        elif type(size) == GridPos:
             self.size = size
         else:
             raise TypeError("Please only use either string, tuple or Vector2 to set Minesweeper size")
 
         self.board : list[MinesweeperSquare] = []
-        self.cursor : Vector2 = Vector2(0, 0)
+        self.cursor : GridPos = GridPos(0, 0)
 
     def generate_board(self, num_bombs : int):
         for x in range(0, self.size.x * self.size.y):
