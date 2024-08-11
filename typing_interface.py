@@ -1,5 +1,9 @@
-# static data and functions
+# Baseclass and interface for the typing UI
+
 class Typer:
+    #methods and constructor from line: 73
+
+    # static data and functions, static member classes
     ESC: str = '\x1B'
     class Color_256:
         """
@@ -66,15 +70,48 @@ class Typer:
             Cyan: tuple[str, str] = ('96', '106')
             White: tuple[str, str] = ('97', '107')
 
-# methods
-class Typer:
-    def __init__(self, text: str, path: bool = False):
+    # methods and instanciated member classes
+    class State:
+        def __init__(self, text: list[str], current_line_idx: int = 0):     # -> State
+            self.text = text
+            self.text_length = len(text)
+            if current_line_idx >= self.text_length:
+                current_line_idx = 0
+            self.current_line_idx = current_line_idx
+            self.current_line = text[current_line_idx]
+
+        def Next(self) -> None:
+            if self.current_line_idx >= self.text_length:
+                return None
+            self.current_line_idx += 1
+            return self.text[self.current_line_idx]
+
+        def GetNext(self) -> str | None:
+            """
+            Gets the next line as a string.\n
+            **Does not switch to the next line in the State instance**\n
+            Returns None if there's no next line.
+            """
+            pass
+
+    def __init__(self, text: str, path: bool = False, displayed_lines: int = 3):
         self.text: list[str]
+        self.num_lines: int
+        self.displayed_lines: int   # should we cap this at 10?
+        self.current_line: list[str] # length should be between 1 and 3
+
         if path:
             with open(path, mode='r', encoding='utf-8') as f:
                 self.text = f.read().split('\n')
         else:
             self.text = text.split('\n')
+        
+        self.num_lines = len(self.text)
+        if displayed_lines < 1:
+            self.displayed_lines = 1
+        else:
+            self.displayed_lines = displayed_lines
+        self.current_line = self.text[0]
 
     def Start(self):
         pass
@@ -82,4 +119,4 @@ class Typer:
     def __str__(self):
         pass
 
-print("\x1B[41;36m stuff")
+# print("\x1B[41;36m stuff")
