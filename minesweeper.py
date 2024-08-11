@@ -1,5 +1,4 @@
 from getch_crossplatform import *
-from maths_lib import Vector2
 import random
 import os
 import subprocess
