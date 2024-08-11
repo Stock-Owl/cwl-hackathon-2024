@@ -1,7 +1,8 @@
 # Baseclass and interface for the typing UI
 
 class Typer:
-    #methods and constructor from line: 73
+    # __init__ at line: 161
+    #methods and constructor from line: 74
 
     # static data and functions, static member classes
     ESC: str = '\x1B'
@@ -80,19 +81,82 @@ class Typer:
             self.current_line_idx = current_line_idx
             self.current_line = text[current_line_idx]
 
-        def Next(self) -> None:
+        def RefreshCurrentLine(self) -> None:
+            # this shouldn't ever need to be ran, but just in case
+            if self.current_line_idx >= self.text_length:
+                self.current_line_idx = None
+                return
+            self.current_line = self.text[self.current_line_idx]
+
+        def GetCurrentLine(self) -> str | None:
             if self.current_line_idx >= self.text_length:
                 return None
-            self.current_line_idx += 1
-            return self.text[self.current_line_idx]
+            return self.current_line
 
-        def GetNext(self) -> str | None:
+        # next lines
+        def Next(self) -> int | None:
+            # we could instead return None by default
+            # and return an Exception if the end of text is reached
+            # I did it like this to differentiate the
+            # end of text from a succesfull operation by return type
+            if self.current_line_idx >= self.text_length:
+                self.current_line = None
+                return None
+            self.current_line_idx += 1
+            # refresh current line
+            self.current_line = self.text[self.current_line_idx]
+            return self.current_line_idx
+
+        def GetNextLine(self) -> str | None:
             """
             Gets the next line as a string.\n
             **Does not switch to the next line in the State instance**\n
             Returns None if there's no next line.
             """
-            pass
+            if self.current_line_idx >= self.text_length:
+                return None
+            return self.text[self.current_line_idx + 1]
+
+        def GetNextNLines(self, number_of_lines: int) -> list[str | None]:
+            # returns None at the position the text ends
+            next_lines: list[str | None] = []
+            for i in range(1, number_of_lines + 1):
+                if (self.current_line_idx + i) >= self.text_length:
+                    next_lines.append(None)
+                    return next_lines
+                next_lines.append(self.text[self.current_line_idx + i])
+            return next_lines
+
+        # previous lines
+        def Previous(self) -> int | 0:
+            if self.current_line_idx < 1:
+                self.current_line = self.text[0]
+                self.current_line_idx = 0
+                return 0
+            self.current_line_idx -= 1
+            # refresh current line
+            self.current_line = self.text[self.current_line_idx]
+            return self.current_line_idx
+
+        def GetPreviousLine(self) -> str | None:
+            """
+            Gets the previous line as a string.\n
+            **Does not switch to the previous line in the State instance**\n
+            Returns None if there's no previous line.
+            """
+            if self.current_line_idx < 1:
+                return None
+            return self.text[self.current_line_idx - 1]
+
+        def GetpreviousNLines(self, number_of_lines: int) -> list[str | None]:
+            # returns None at the position the text ends
+            prev_lines: list[str | None] = []
+            for i in range(1, number_of_lines + 1):
+                if (self.current_line_idx - i) < 0:
+                    prev_lines.append(None)
+                    return prev_lines
+                prev_lines.append(self.text[self.current_line_idx - i])
+            return prev_lines
 
     def __init__(self, text: str, path: bool = False, displayed_lines: int = 3):
         self.text: list[str]
