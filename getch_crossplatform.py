@@ -1,10 +1,11 @@
 import sys
 
 # we will need to rename this [Pickle]
+# btw very fucking clean code, very based (:
 
 def _Getch() -> str:
     if sys.platform == "win32":
-       return _GetchWindows()
+        return _GetchWindows()
     else:
         return _GetchUnix()
 
