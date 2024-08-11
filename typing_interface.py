@@ -183,7 +183,3 @@ class Typer:
 
     def __str__(self):
         pass
-
-# print("\x1B[41;36m stuff")
-
-import minesweeper
