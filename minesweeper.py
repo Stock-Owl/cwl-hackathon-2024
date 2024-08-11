@@ -1,4 +1,5 @@
 from getch_crossplatform import *
+from typing_interface import Typer
 import random
 import os
 import subprocess
@@ -26,17 +27,17 @@ class MinesweeperSquare:
 def print_square(square : MinesweeperSquare, end : str = "\n", is_selected : bool = False):
     if square.opened:
         if square.value == -1:
-            if is_selected: print("\033[47m\033[30m▣\033[0m", end = end)
+            if is_selected: print(Typer.Color_16.SetBackground(Typer.Color_16.White)+Typer.Color_16.SetForeground(Typer.Color_16.Black)+"▣\033[0m", end = end)
             else: print("▣", end = end)
         else:
-            if is_selected: print(f"\033[47m\033[30m{square.value}\033[0m", end = end)
+            if is_selected: print(Typer.Color_16.SetBackground(Typer.Color_16.White)+Typer.Color_16.SetForeground(Typer.Color_16.Black)+f"{square.value}\033[0m", end = end)
             else: print(square.value, end = end)
     else:
         if square.flag:
-            if is_selected: print("\033[47m\033[30m⚑\033[0m", end = end)
+            if is_selected: print(Typer.Color_16.SetBackground(Typer.Color_16.White)+Typer.Color_16.SetForeground(Typer.Color_16.Black)+"⚑\033[0m", end = end)
             else: print("⚑", end = end)
         else:
-            if is_selected: print(f"\033[47m\033[30m■\033[0m", end = end)
+            if is_selected: print(Typer.Color_16.SetBackground(Typer.Color_16.White)+Typer.Color_16.SetForeground(Typer.Color_16.Black)+f"■\033[0m", end = end)
             else: print("■", end = end)
 
 class Minesweeper:
