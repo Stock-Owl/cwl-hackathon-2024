@@ -22,6 +22,10 @@ class MinesweeperSquare:
 def print_square(square : MinesweeperSquare, end : str = "\n", is_selected : bool = False):
     if square.opened:
         if square.is_bomb:
+            # [Pickle]
+            # Have you checked typing_interface.py???
+            # There's a static implementation for this already.
+            # Which is much more readable.
             if is_selected: print(f"\033[47m\033[30m▣\033[0m", end = end)
             else: print("▣", end = end)
         else:
