@@ -10,6 +10,7 @@ import time
 # Created by TheHerowither, based on (https://en.wikipedia.org/wiki/Minesweeper_(video_game))
 # TODO: Win condition
 # TODO: Point system
+# TODO: Major refactor
 
 
 class GridPos:
@@ -190,7 +191,7 @@ class Minesweeper:
 
 
 if __name__ == "__main__":
-    game = Minesweeper("15x15")
+    game = Minesweeper("9x9")
     game.generate_board(10)
 
     game.run()
