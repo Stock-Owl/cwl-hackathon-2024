@@ -7,6 +7,12 @@ import sys
 import time
 
 
+########
+# DISCLAMER!!!!!!
+# I know this code is shit
+# i am going to do a refactor as soon as i find time
+########
+
 # Created by TheHerowither, based on (https://en.wikipedia.org/wiki/Minesweeper_(video_game))
 # TODO: Win condition
 # TODO: Point system
