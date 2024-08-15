@@ -1,12 +1,27 @@
 # Made by [Pickle]
 # Baseclass and interface for the typing UI
 
+# shit's about to get real when you see this crap
+import re
+
 class Typer:
-    # __init__ at line: 161
-    #methods and constructor from line: 74
+    
+    # __init__ at line: 226
+    #methods from line: 305
 
     # static data and functions, static member classes
     ESC: str = '\x1B'
+
+    # ColorContainer is for readability
+    # Effect on performance is negligeable
+    class ColorContainer:
+        def __init__(self, foreground_color: str = "", background_color: str = ""):
+            self.foreground_color = foreground_color
+            self.background_color = background_color
+
+        def __str__(self):
+            return f"{self.foreground}{self.background}"
+
     class Color_256:
         """
         Refer to
@@ -23,54 +38,88 @@ class Typer:
                 color_code = str(color_code)
             return f"{Typer.ESC}[48;5;{color_code}m"
         
-        # original colors (root_colors) should always be passed from parent Typer object
+        # original colors (original_colors) should always be passed from parent Typer object
         def ChangeColor(
                 string: str,
-                foreground_color: str | None,
-                background_color: str | None,
-                root_colors: tuple[str, str]
+                colors: tuple[str | None, str | None],
+                original_colors: tuple[str, str]
             ) -> str:
 
-            if foreground_color is None:
-                foreground_color = root_colors[0]
-            if background_color is None:
-                foreground_color = root_colors[1]
+            if colors == original_colors:
+                return string
+            if colors[0] is None:
+                colors[0] = original_colors[0]
+            if colors[1] is None:
+                colors[1] = original_colors[1]
 
-            set_colors: str = f"{Typer.ESC}[38;5;{foreground_color}m{Typer.ESC}[48;5;{background_color}m"
-            restore_colors: str = f"{Typer.ESC}[38;5;{root_colors[0]}m{Typer.ESC}[48;5;{root_colors[1]}m"
-            return f"{set_colors}{string}{restore_colors}"
+            # second one is always the background color, so we add 10
+            colors[1] += 10
+            original_colors[1] += 10
+
+            set_colors: Typer.ColorContainer = Typer.ColorContainer(
+                foreground_color = f"{Typer.ESC}[38;5;{colors[0]}m",
+                background_color = f"{Typer.ESC}[48;5;{colors[1]}m"
+                )
+            restore_colors: Typer.ColorContainer = Typer.ColorContainer(
+                foreground_color = f"{Typer.ESC}[38;5;{original_colors[0]}m",
+                background_color = f"{Typer.ESC}[48;5;{original_colors[1]}m"
+                )
+            return f"{str(set_colors)}{string}{str(restore_colors)}"
         
     class Color_16:
-        def SetForeground(color_code: tuple[str, str]) -> str:
-            return f"{Typer.ESC}[{color_code[0]}m"
+        def SetForeground(color_code: int) -> str:
+            return f"{Typer.ESC}[{str(color_code)}m"
 
         def SetBackground(color_code: tuple[str, str]) -> str:
-            return f"{Typer.ESC}[{color_code[1]}m"
-    
-        # note: we could just store the codes as ints for the foregound and
-        # just add 10 for background codes and then convert them to strings
-        # went with this for now
+            return f"{Typer.ESC}[{str(color_code + 10)}m"
+        
+        def ChangeColor(
+                string: str,
+                colors: tuple[int | None, int | None],
+                original_colors: tuple[int, int]
+            ) -> str:
 
-        # first num is foreground, second is background
-        Black: tuple[str, str] = ('30', '40')
-        Red: tuple[str, str] = ('31', '41')
-        Green: tuple[str, str] = ('32', '42')
-        Yellow: tuple[str, str] = ('33', '43')
-        Blue: tuple[str, str] = ('34', '44')
-        Magenta: tuple[str, str] = ('35', '45')
-        Cyan: tuple[str, str] = ('36', '46')
-        White: tuple[str, str] = ('37', '47')
+            if colors == original_colors:
+                return string
+            if colors[0] is None:
+                colors[0] = original_colors[0]
+            if colors[1] is None:
+                colors[1] = original_colors[1]
+
+            # second one is always the background color, so we add 10
+            colors[1] += 10
+            original_colors[1] += 10
+
+            set_colors: Typer.ColorContainer = Typer.ColorContainer(
+                foreground = f"{Typer.ESC}[{str(colors[0])}m",
+                background = f"{Typer.ESC}[{str(colors[1])}m"
+                )
+            restore_colors: Typer.ColorContainer = Typer.ColorContainer(
+                foreground = f"{Typer.ESC}[{str(original_colors[0])}m",
+                background = f"{Typer.ESC}[{str(original_colors[1])}m"
+                )
+            
+            return f"{str(set_colors)}{string}{str(restore_colors)}"
+
+        Black: int = 30
+        Red: int = 31
+        Green: int = 32
+        Yellow: int = 33
+        Blue: int = 34
+        Magenta: int = 35
+        Cyan: int = 36
+        White: int = 37
 
         class Bright:
             # first num is foreground, second is background
-            Black: tuple[str, str] = ('90', '100')
-            Red: tuple[str, str] = ('91', '101')
-            Green: tuple[str, str] = ('92', '102')
-            Yellow: tuple[str, str] = ('93', '103')
-            Blue: tuple[str, str] = ('94', '104')
-            Magenta: tuple[str, str] = ('95', '105')
-            Cyan: tuple[str, str] = ('96', '106')
-            White: tuple[str, str] = ('97', '107')
+            Black: int = 90
+            Red: int = 91
+            Green: int = 92
+            Yellow: int = 93
+            Blue: int = 94
+            Magenta: int = 95
+            Cyan: int = 96
+            White: int = 97
 
     # methods and instanciated member classes
     class State:
@@ -81,6 +130,23 @@ class Typer:
                 current_line_idx = 0
             self.current_line_idx = current_line_idx
             self.current_line = text[current_line_idx]
+
+        # -> str, a shocker, right?
+        def __str__(self) -> str:
+            # the class itself shouldn't be accessed by anything other than a Typer owner
+            # so we're not giving a damn about ouputting self.text
+
+            return_string: str = f"State object at {hex(id(self))} | Memory allocated: {self.__sizeof__()} bytes\n" + \
+                f"Length: {self.text_length} characters including whitespace\n" + \
+                f"Current line:\n\"{self.text[self.current_line_idx]}\" # {self.current_line_idx}"
+            
+            before_refresh_line: str = self.text[self.current_line_idx]
+            self.RefreshCurrentLine() # refresh just in case
+            if self.text[self.current_line_idx] == before_refresh_line:
+                return_string += \
+                    f"\nCurrent line after refreshing:\n\"{self.text[self.current_line_idx]}\" # {self.current_line_idx}"
+
+            return return_string
 
         def RefreshCurrentLine(self) -> None:
             # this shouldn't ever need to be ran, but just in case
@@ -160,31 +226,105 @@ class Typer:
                 prev_lines.append(self.text[self.current_line_idx - i])
             return prev_lines
 
-    def __init__(self, text: str, path: bool = False, displayed_lines: int = 3):
-        init_text: list[str]
+    def __init__(
+            self,
+            text: str,
+            path: bool = False,
+            displayed_lines: int = 3,
+            trim_text: int = 0,
+            max_line_width: int = 60
+        ):
         
+        processed_text: list[str]
+        
+        self.path_to_source_file: str | None
         self.buffer: list[str] = []
-        self.intercept: function
         self.displayed_lines: int   # should we cap this at 10?
-        self.current_line: list[str] # length should be between 1 and 3
-        self.state: Typer.State
+        self.max_line_width: int
+        self.state: Typer.State     # State is read-only
+        
+        # ONLY used for the formatting process
+        def split_long_lines(string, max_length) -> list[str]:
+            out: list[str] = []
+            idx: int = max_length - 1 # we start at the exact position we need to start at
+            while True:
+                if len(string) < max_length:
+                    out.append(string)
+                    break
+                if string[idx] == " ":
+                    out.append(string[:idx])
+                    string = string[idx:]
+                    idx = max_length - 1
+                idx -= 1
+            return out
+
+        def enforce_line_width(text, max_length) -> None:
+            output_list: list[str] = []
+            previous_line: str = ""
+            for current_line in text:
+                current_line = " " + current_line.strip()
+                if len(current_line) > max_length:
+                    output_list.append(previous_line)
+                    enforced_output: list[str] = split_long_lines(current_line, max_length)
+                    for enforced_line in enforced_output:
+                        output_list.append(enforced_line)
+                    previous_line = ""
+                    continue
+                if (len(previous_line) + len(current_line)) > max_length:
+                    output_list.append(previous_line)
+                    previous_line = ""
+                previous_line += current_line
+            return output_list
+
+        # we'll format the separated lines
 
         if path:
-            with open(path, mode='r', encoding='utf-8') as f:
-                init_text = f.read().split('\n')
+            with open(text, mode='r', encoding='utf-8') as f:
+                # splits at any punctuation (,.?!:;)
+                processed_text = enforce_line_width(re.findall("[^,.?!:;]*[,.?!:;]", f.read()), max_line_width)
+                self.path_to_source_file = text
         else:
-            init_text = text.split('\n')
+            processed_text = enforce_line_width(re.findall("[^,.?!:;]*[,.?!:;]", text), max_line_width)
+            self.path_to_source_file = None
         
+        if trim_text > 0 and trim_text < len(processed_text - 1):
+            processed_text = processed_text[:trim_text]
+
         if displayed_lines < 1:
             self.displayed_lines = 1
         else:
             self.displayed_lines = displayed_lines
-        self.current_line = init_text[0]
 
-        self.state = Typer.State(init_text)
+        self.max_line_width = max_line_width
 
-    def Update(self):
-        pass
+        self.state = Typer.State(processed_text)
 
-    def __str__(self):
+    def __str__(self) -> str:
+        # hacks to modify the str() return for self.state
+        state_split: list[str] = str(self.state).split("\n")
+        state_str: str = ""
+        for i in len(state_split):
+            line: str = state_split[i]
+            if i == 0:
+                # this is dirty as hell
+                split_line = line.split("|")
+                state_str += f"\t{split_line[0]}property of Typer object at {hex(id(self))} |{split_line[1]}\n"
+                del split_line
+            if i == 1:
+                if self.path_to_source_file is None:
+                    # the text isn't from a file then
+                    continuation: str = "[...]" if self.state.text_length > 0 else ""   # this is disgusting as well
+                    state_str += f"\t\"{self.state.text[0]} {continuation}\"\n"
+                state_str += f"\tPath of text source file: \"{self.path_to_source_file}\"\n"
+                state_str += f"\t{line}\n"
+            state_str += f"\t{line}\n"
+        
+        del line    # to prevent accidental accesses, just in case
+
+        return_string: str = f"Typer object at {hex(id(self))} | Memory allocated: {self.__sizeof__()} bytes\n" + \
+        f""
+        
+        return return_string
+
+    def Refresh(self):
         pass
