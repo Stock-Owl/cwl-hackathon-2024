@@ -258,7 +258,7 @@ class Typer:
                 idx -= 1
             return out
 
-        def enforce_line_width(text, max_length) -> None:
+        def enforce_line_width(text, max_length) -> list[str]:
             output_list: list[str] = []
             previous_line: str = ""
             for current_line in text:
@@ -321,10 +321,33 @@ class Typer:
         
         del line    # to prevent accidental accesses, just in case
 
+        buffer_str: str = ""
+        line_idx: int | None = self.state.current_line_idx
+        if line_idx is None:
+            buffer_str = "\n".join(self.state.text[len(self.state.text_length) - 3:])
+        if line_idx == 0:
+            buffer_str = "\n".join(self.state.text[0:3])
+        elif line_idx >= len(self.state.text_length) - 1:
+            buffer_str = "\n".join(self.state.text[len(self.state.text_length) - 3:])
+        else:
+            buffer_str = "\n".join(self.state.text[line_idx-2:line_idx+1])
+
         return_string: str = f"Typer object at {hex(id(self))} | Memory allocated: {self.__sizeof__()} bytes\n" + \
-        f""
+        f"Maximum line widht: {self.max_line_width} characters | {self.displayed_lines} lines displayed\n" + \
+        f"Currently displayed lines in buffer:\n\"{buffer_str}\"\n" + \
+        f"State:\n{state_str}" 
         
         return return_string
 
-    def Refresh(self):
+    def Refresh(self) -> list[str]:
         pass
+
+    def Forward(self) -> list[str]:
+        pass
+    
+    def Back(self) -> list[str]:
+        pass
+
+if __name__ == "__main__":
+    t = Typer("Árvíztűrő tükörfúró gép Hósszú utca girbe gurba minden sarkon áll egy [redacted]")
+    print(t)
