@@ -169,7 +169,7 @@ class Minesweeper:
                 print(f"Cursor: {self.cursor.x}, {self.cursor.y}")
                 c = getch()
                 if c == '\033':
-                    getch()
+                    getch() # we're just ignoring an input??? why?
                     match getch():
                         case 'A':
                             if self.cursor.y > 0: self.cursor.y -= 1
