@@ -29,16 +29,24 @@ def process_args(args: list[str]) -> Arguments:
                 returned_arguments.path_specified = value.strip("\"")
             case "t":
                 returned_arguments.text_specified = value.strip()
+            case "w":
+                try:
+                    i_val: int = int(value)
+                    if i_val < 44:
+                        returned_arguments.max_line_width = "60"
+                    else:
+                        returned_arguments.max_line_width = value
+                except ValueError:
+                    returned_arguments.max_line_width = "60"
             case "l":
                 try:
                     i_val: int = int(value)
                     if i_val < 0:
-                        returned_arguments.mode_init_value = "0"
+                        returned_arguments.trim_text = "0"
                     else:
-                        returned_arguments.mode_init_value = value
+                        returned_arguments.trim_text = value
                 except ValueError:
-                    returned_arguments.mode_init_value = "0"
-                pass
+                    returned_arguments.trim_text = "0"
             case "m":
                 returned_arguments.mode = "mine"
                 if value == "":

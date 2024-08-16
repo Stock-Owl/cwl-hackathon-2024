@@ -358,7 +358,7 @@ class Typer:
         elif line_idx >= self.state.text_length - 1:
             displayed = self.state.text[len(self.state.text_length) - 3:]
         else:
-            displayed = self.state.text[line_idx-2 : line_idx+1]
+            displayed = self.state.text[line_idx-1 : line_idx+2]
 
         return displayed
 
@@ -376,5 +376,7 @@ class Typer:
 if __name__ == "__main__":
     t = Typer("Árvíztűrő tükörfúró gép. Hósszú utca girbe gurba minden sarkon áll egy [redacted]. Egy vekni kenyér, egy üveg tej és egy kocka vaj. Egy vekni tej, egy üveg kenyér és egy kismocsok DVD. Egy kismocsok DVD és a kincs az antikváriumból.")
     # print(t)
-    for j in t.Forward():
+    t.Forward()
+    result = t.Forward()
+    for j in result:
         print(j)

@@ -7,3 +7,4 @@ class Arguments:
         self.mode_init_value: str | None = None
         self.lines_displayed: str | None = None
         self.trim_text: str | None = None
+        self.max_line_width: str | None = None
