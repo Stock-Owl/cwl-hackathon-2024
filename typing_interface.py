@@ -136,8 +136,8 @@ class Typer:
             # the class itself shouldn't be accessed by anything other than a Typer owner
             # so we're not giving a damn about ouputting self.text
 
-            return_string: str = f"State object at {hex(id(self))} | Memory allocated: {self.__sizeof__()} bytes\n" + \
-                f"Length: {self.text_length} characters including whitespace\n" + \
+            return_string: str = f"State object at <{hex(id(self))}> | Memory allocated: {self.__sizeof__()} bytes\n" + \
+                f"Length: {self.text_length} lines\n" + \
                 f"Current line:\n\"{self.text[self.current_line_idx]}\" # {self.current_line_idx}"
             
             before_refresh_line: str = self.text[self.current_line_idx]
@@ -168,6 +168,7 @@ class Typer:
             # end of text from a succesfull operation by return type
             if self.current_line_idx >= self.text_length:
                 self.current_line = None
+                self.current_line_idx = None
                 return None
             self.current_line_idx += 1
             # refresh current line
@@ -230,7 +231,6 @@ class Typer:
             self,
             text: str,
             path: bool = False,
-            displayed_lines: int = 3,
             trim_text: int = 0,
             max_line_width: int = 60
         ):
@@ -244,7 +244,7 @@ class Typer:
         self.state: Typer.State     # State is read-only
         
         # ONLY used for the formatting process
-        def split_long_lines(string, max_length) -> list[str]:
+        def split_long_lines(string: str, max_length: int) -> list[str]:
             out: list[str] = []
             idx: int = max_length - 1 # we start at the exact position we need to start at
             while True:
@@ -258,7 +258,9 @@ class Typer:
                 idx -= 1
             return out
 
-        def enforce_line_width(text, max_length) -> list[str]:
+        def enforce_line_width(text: list[str], max_length: int) -> list[str]:
+            if not isinstance(text, list):
+                return split_long_lines(text, max_length)
             output_list: list[str] = []
             previous_line: str = ""
             for current_line in text:
@@ -279,21 +281,36 @@ class Typer:
         # we'll format the separated lines
 
         if path:
-            with open(text, mode='r', encoding='utf-8') as f:
-                # splits at any punctuation (,.?!:;)
-                processed_text = enforce_line_width(re.findall("[^,.?!:;]*[,.?!:;]", f.read()), max_line_width)
-                self.path_to_source_file = text
+            try:
+                with open(text, mode='r', encoding='utf-8') as f:
+                    content: str = f.read()
+                    # splits at any punctuation (,.?!:;)
+                    post_regex_text = re.findall("[^,.?!:;]*[,.?!:;]", content)
+                    # if there isn't any punctuation, then regex will return []
+                    if post_regex_text == []:
+                        processed_text = enforce_line_width(content, max_line_width)
+                    else:
+                        processed_text = enforce_line_width(post_regex_text, max_line_width)
+                    self.path_to_source_file = text
+            except FileNotFoundError:
+                print(f"File wasn't found. Path: \"{text}\"")
+                exit(0)
+            except:
+                print(f"File found but it couldn't be opened. Path: \"{text}\"")
+                exit(0)
         else:
-            processed_text = enforce_line_width(re.findall("[^,.?!:;]*[,.?!:;]", text), max_line_width)
+            post_regex_text = re.findall("[^,.?!:;]*[,.?!:;]", text)
+            # if there isn't any punctuation, then regex will return []
+            if post_regex_text == []:
+                processed_text = enforce_line_width(text, max_line_width)
+            else:
+                processed_text = enforce_line_width(post_regex_text, max_line_width)
             self.path_to_source_file = None
         
         if trim_text > 0 and trim_text < len(processed_text - 1):
             processed_text = processed_text[:trim_text]
 
-        if displayed_lines < 1:
-            self.displayed_lines = 1
-        else:
-            self.displayed_lines = displayed_lines
+        self.displayed_lines = 3
 
         self.max_line_width = max_line_width
 
@@ -303,51 +320,61 @@ class Typer:
         # hacks to modify the str() return for self.state
         state_split: list[str] = str(self.state).split("\n")
         state_str: str = ""
-        for i in len(state_split):
+        for i in range(len(state_split)):
             line: str = state_split[i]
             if i == 0:
                 # this is dirty as hell
-                split_line = line.split("|")
-                state_str += f"\t{split_line[0]}property of Typer object at {hex(id(self))} |{split_line[1]}\n"
-                del split_line
+                state_str += f"\t{line}\n\tProperty of Typer object at <{hex(id(self))}>\n"
+                continue
             if i == 1:
                 if self.path_to_source_file is None:
                     # the text isn't from a file then
                     continuation: str = "[...]" if self.state.text_length > 0 else ""   # this is disgusting as well
                     state_str += f"\t\"{self.state.text[0]} {continuation}\"\n"
-                state_str += f"\tPath of text source file: \"{self.path_to_source_file}\"\n"
+                else:
+                    state_str += f"\tPath of text source file: \"{self.path_to_source_file}\"\n"
                 state_str += f"\t{line}\n"
+                continue
             state_str += f"\t{line}\n"
         
         del line    # to prevent accidental accesses, just in case
 
-        buffer_str: str = ""
-        line_idx: int | None = self.state.current_line_idx
-        if line_idx is None:
-            buffer_str = "\n".join(self.state.text[len(self.state.text_length) - 3:])
-        if line_idx == 0:
-            buffer_str = "\n".join(self.state.text[0:3])
-        elif line_idx >= len(self.state.text_length) - 1:
-            buffer_str = "\n".join(self.state.text[len(self.state.text_length) - 3:])
-        else:
-            buffer_str = "\n".join(self.state.text[line_idx-2:line_idx+1])
+        displayed_str: str = "\n".join(self.Refresh())
 
-        return_string: str = f"Typer object at {hex(id(self))} | Memory allocated: {self.__sizeof__()} bytes\n" + \
+        return_string: str = f"Typer object at <{hex(id(self))}> | Memory allocated: {self.__sizeof__()} bytes\n" + \
         f"Maximum line widht: {self.max_line_width} characters | {self.displayed_lines} lines displayed\n" + \
-        f"Currently displayed lines in buffer:\n\"{buffer_str}\"\n" + \
+        f"Currently displayed lines (not centered):\n\"{displayed_str}\"\n" + \
         f"State:\n{state_str}" 
         
         return return_string
 
     def Refresh(self) -> list[str]:
-        pass
+        displayed: list[str] = []
+        line_idx: int | None = self.state.current_line_idx
+        if line_idx is None:
+            displayed = self.state.text[len(self.state.text_length) - 3:]
+        if line_idx == 0:
+            displayed = self.state.text[0:3]
+        elif line_idx >= self.state.text_length - 1:
+            displayed = self.state.text[len(self.state.text_length) - 3:]
+        else:
+            displayed = self.state.text[line_idx-2 : line_idx+1]
+
+        return displayed
 
     def Forward(self) -> list[str]:
-        pass
+        self.state.Next()
+        return self.Refresh()
     
     def Back(self) -> list[str]:
-        pass
+        self.state.Previous()
+        return self.Refresh()
+
+    def ReachedEndOfText(self) -> bool:
+        return (self.state.current_line_idx is None)
 
 if __name__ == "__main__":
-    t = Typer("Árvíztűrő tükörfúró gép Hósszú utca girbe gurba minden sarkon áll egy [redacted]")
-    print(t)
+    t = Typer("Árvíztűrő tükörfúró gép. Hósszú utca girbe gurba minden sarkon áll egy [redacted]. Egy vekni kenyér, egy üveg tej és egy kocka vaj. Egy vekni tej, egy üveg kenyér és egy kismocsok DVD. Egy kismocsok DVD és a kincs az antikváriumból.")
+    # print(t)
+    for j in t.Forward():
+        print(j)
